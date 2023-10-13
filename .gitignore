@@ -31,7 +31,7 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
-lib/api_key.txt
+assets/api_key.txt
 
 # Symbolication related
 app.*.symbols
