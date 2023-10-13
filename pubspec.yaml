@@ -11,12 +11,15 @@ dependencies:
   flutter:
     sdk: flutter
 
-
   flutter_bloc: ^8.0.0
   dio: ^5.3.3
   hive: ^2.2.3
+  json_annotation: ^4.8.1
+  fluttertoast: ^8.2.2
 
 dev_dependencies:
+  build_runner: ^2.4.6
+  json_serializable: ^6.7.1
   flutter_test:
     sdk: flutter
 
@@ -27,5 +30,5 @@ flutter:
 
   uses-material-design: true
 
-  # assets:
-  #   - images/a_dot_ham.jpeg
+  assets:
+   - assets/api_key.txt
