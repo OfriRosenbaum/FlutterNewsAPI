@@ -19,6 +19,11 @@ class _SearchPageState extends State<SearchPage> {
   late NewsBloc _newsBloc;
   final _scrollController = ScrollController();
   List<NewsCard> news = [];
+  TextEditingController textController = TextEditingController();
+
+  //Free NewsAPI search is limited to 1 month back with free API key. Substract 5 years instead if you have a paid key.
+  DateTime selectedStartDate = DateTime.now().subtract(const Duration(days: 30));
+  DateTime selectedEndDate = DateTime.now();
 
   @override
   void initState() {
@@ -36,16 +41,19 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Widget _buildInitialState() {
-    return Center(
-      child: ElevatedButton(
-          onPressed: () => _newsBloc.add(FetchNewsEvent(
-              repository: RepositoryProvider.of(context),
-              news: [],
-              q: 'coca cola',
-              from: "2023-9-25",
-              to: "2023-9-27")),
-          child: const Text("Fetch news")),
-    );
+    return Column(children: [
+      _searchBar(),
+      Center(
+        child: ElevatedButton(
+            onPressed: () => _newsBloc.add(FetchNewsEvent(
+                repository: RepositoryProvider.of(context),
+                news: [],
+                q: 'coca cola',
+                from: "2023-9-25",
+                to: "2023-9-27")),
+            child: const Text("Fetch news")),
+      ),
+    ]);
   }
 
   Widget _buildLoadingState() {
@@ -68,27 +76,94 @@ class _SearchPageState extends State<SearchPage> {
 
   Widget _buildLoadedState(NewsLoadedState state) {
     news = state.news;
-    return ListView.builder(
-      itemCount: state.hasReachedMax ? news.length : news.length + 1,
-      itemBuilder: (context, index) {
-        return index >= news.length
-            ? const Center(child: CircularProgressIndicator())
-            : news[index].showNewsCard(context);
-      },
-      controller: _scrollController,
+    return SingleChildScrollView(
+      child: Column(children: [
+        _searchBar(),
+        ListView.builder(
+          itemCount: state.hasReachedMax ? news.length : news.length + 1,
+          itemBuilder: (context, index) {
+            return index >= news.length
+                ? const Center(child: CircularProgressIndicator())
+                : news[index].showNewsCard(context);
+          },
+          controller: _scrollController,
+          shrinkWrap: true,
+        ),
+      ]),
+    );
+  }
+
+  Widget _searchBar() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(children: [
+        TextFormField(
+          controller: textController,
+          decoration: const InputDecoration(
+            labelText: 'Search Text',
+          ),
+          validator: (value) {
+            if (value == null) return null;
+            if (value.isEmpty) {
+              return 'Please enter search text';
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 16.0),
+        Row(
+          children: [
+            Expanded(
+              child: ListTile(
+                title: Text(
+                  'Start Date: ${selectedStartDate.day}/${selectedStartDate.month}/${selectedStartDate.year}',
+                ),
+                trailing: const Icon(Icons.calendar_today),
+                onTap: () {
+                  showDatePicker(
+                    context: context,
+                    initialDate: selectedStartDate,
+                    firstDate: selectedStartDate,
+                    lastDate: selectedEndDate,
+                  ).then((pickedDate) {
+                    if (pickedDate != null) {
+                      setState(() {
+                        selectedStartDate = pickedDate;
+                      });
+                    }
+                  });
+                },
+              ),
+            ),
+            Expanded(
+              child: ListTile(
+                title: Text('End Date: ${selectedEndDate.day}/${selectedEndDate.month}/${selectedEndDate.year}'),
+                trailing: const Icon(Icons.calendar_today),
+                onTap: () {
+                  showDatePicker(
+                    context: context,
+                    initialDate: selectedEndDate,
+                    firstDate: selectedStartDate,
+                    lastDate: selectedEndDate,
+                  ).then((pickedDate) {
+                    if (pickedDate != null) {
+                      setState(() {
+                        selectedEndDate = pickedDate;
+                      });
+                    }
+                  });
+                },
+              ),
+            ),
+          ],
+        )
+      ]),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          "Search Page",
-          style: TextStyle(color: Colors.black),
-        ),
-        backgroundColor: Colors.white,
-      ),
       body: BlocConsumer<NewsBloc, NewsState>(
         listener: (context, state) {
           if (state is NewsErrorState) {
