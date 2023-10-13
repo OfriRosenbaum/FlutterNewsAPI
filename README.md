@@ -9,8 +9,8 @@ To use this app, create an `assets` folder at the root of the project, and place
 In the first line of this file, place your NewsAPI key.
 
 ## Note
-When debugging the app with VS Code, you may get error 404 on one (or more) of the images.
-If you debug with break points on uncaught exceptions, your code will stop there, even if its inside try&catch.
+When using the app, you may get error 404 on one (or more) of the images.
+If you debug on VS Code with breakpoints on uncaught exceptions, your code will stop there, even if the part that's throwing the error is inside try&catch.
 To prevent this issue, simply debug the app without breakpoints on uncaught exceptions.
 
 ## Dependencies
