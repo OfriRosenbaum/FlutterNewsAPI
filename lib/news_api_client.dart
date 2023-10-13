@@ -3,7 +3,14 @@ import 'dart:developer';
 
 import 'package:dio/dio.dart';
 
-class NewsCardRequestException implements Exception {}
+class NewsCardRequestException implements Error {
+  NewsCardRequestException() {
+    log('NewsCardRequestException');
+  }
+
+  @override
+  StackTrace? get stackTrace => throw UnimplementedError();
+}
 
 class NewsApiClient {
   NewsApiClient({required this.apiKey, required this.dio}) {
@@ -11,6 +18,7 @@ class NewsApiClient {
     dio.options.headers = {
       'Authorization': apiKey,
     };
+    dio.options.connectTimeout = const Duration(seconds: 15);
   }
 
   final Dio dio;
@@ -25,17 +33,17 @@ class NewsApiClient {
     int? page,
   }) async {
     Response response;
-    try {
-      response = await dio.get(_path, queryParameters: {
-        'q': q,
-        'from': from,
-        'to': to,
-        'page': page,
-      });
-    } catch (e) {
-      log('$e');
-      throw NewsCardRequestException();
-    }
+    // try {
+    response = await dio.get(_path, queryParameters: {
+      'q': q,
+      'from': from,
+      'to': to,
+      'page': page,
+    });
+    // } catch (e) {
+    //   log('$e');
+    //   throw NewsCardRequestException();
+    // }
     final data = response.data;
     return data;
   }

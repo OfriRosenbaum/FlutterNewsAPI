@@ -36,34 +36,33 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Widget _buildInitialState() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        ElevatedButton(
-            onPressed: () => _newsBloc.add(FetchNewsEvent(
-                repository: RepositoryProvider.of(context),
-                news: [],
-                q: 'coca cola',
-                from: "2023-9-25",
-                to: "2023-9-27")),
-            child: const Text("Fetch news")),
-        const SizedBox(
-          height: 20,
-        ),
-        const Center(
-          child: CircularProgressIndicator(),
-        ),
-        const SizedBox(
-          height: 20,
-        ),
-        const Text("Loading..."),
-      ],
+    return Center(
+      child: ElevatedButton(
+          onPressed: () => _newsBloc.add(FetchNewsEvent(
+              repository: RepositoryProvider.of(context),
+              news: [],
+              q: 'coca cola',
+              from: "2023-9-25",
+              to: "2023-9-27")),
+          child: const Text("Fetch news")),
     );
   }
 
   Widget _buildLoadingState() {
     return const Center(
-      child: CircularProgressIndicator(),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(),
+          SizedBox(
+            height: 20,
+          ),
+          SizedBox(
+            height: 20,
+          ),
+          Text("Loading..."),
+        ],
+      ),
     );
   }
 
@@ -80,12 +79,6 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  Widget _buildErrorState(NewsErrorState state) {
-    return Center(
-      child: Text(state.message),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -99,12 +92,19 @@ class _SearchPageState extends State<SearchPage> {
       body: BlocConsumer<NewsBloc, NewsState>(
         listener: (context, state) {
           if (state is NewsErrorState) {
-            FToast().init(context).showToast(
-                    child: Container(
-                  color: Colors.red,
-                  decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(20))),
-                  child: Text(state.message),
-                ));
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              FToast().init(context).showToast(
+                  toastDuration: const Duration(seconds: 5),
+                  child: Container(
+                    padding: const EdgeInsets.all(16.0),
+                    decoration:
+                        const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(20)), color: Colors.red),
+                    child: Text(
+                      state.message,
+                      style: const TextStyle(fontSize: 16.0),
+                    ),
+                  ));
+            });
           }
         },
         builder: (context, state) {
@@ -114,8 +114,6 @@ class _SearchPageState extends State<SearchPage> {
             return _buildLoadingState();
           } else if (state is NewsLoadedState) {
             return _buildLoadedState(state);
-          } else if (state is NewsErrorState) {
-            return _buildErrorState(state);
           } else {
             return _buildInitialState();
           }
