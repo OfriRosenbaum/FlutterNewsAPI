@@ -93,22 +93,63 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
+  void showSearchDialog() {
+    showDialog(
+        context: context,
+        builder: ((context) {
+          return AlertDialog(
+            title: const Text('Search Keywords'),
+            content: const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Advanced search is supported! What does it mean?'),
+                SizedBox(height: 8.0),
+                Text('Surround phrases with quotes (") for exact match.'),
+                SizedBox(height: 8.0),
+                Text('Prepend words or phrases that must appear with a + symbol. Eg: +bitcoin.'),
+                SizedBox(height: 8.0),
+                Text('Prepend words that must not appear with a - symbol. Eg: -bitcoin.'),
+                SizedBox(height: 8.0),
+                Text(
+                    'Alternatively you can use the AND / OR / NOT keywords, and optionally group these with parenthesis. Eg: crypto AND (ethereum OR litecoin) NOT bitcoin.'),
+              ],
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        }));
+  }
+
   Widget _searchBar() {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(children: [
-        TextFormField(
-          controller: textController,
-          decoration: const InputDecoration(
-            labelText: 'Search Text',
-          ),
-          validator: (value) {
-            if (value == null) return null;
-            if (value.isEmpty) {
-              return 'Please enter search text';
-            }
-            return null;
-          },
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: textController,
+                decoration: const InputDecoration(
+                  labelText: 'Search Text',
+                ),
+                validator: (value) {
+                  if (value == null) return null;
+                  if (value.isEmpty) {
+                    return 'Please enter search text';
+                  }
+                  return null;
+                },
+              ),
+            ),
+            const SizedBox(height: 8.0),
+            IconButton(onPressed: showSearchDialog, icon: const Icon(Icons.info_outline)),
+          ],
         ),
         const SizedBox(height: 16.0),
         Row(
@@ -164,6 +205,9 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('News App'),
+      ),
       body: BlocConsumer<NewsBloc, NewsState>(
         listener: (context, state) {
           if (state is NewsErrorState) {
