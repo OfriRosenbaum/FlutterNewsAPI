@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:home_assignment/barrel.dart';
@@ -17,11 +19,13 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   late NewsBloc _newsBloc;
-  final _scrollController = ScrollController();
+  final _screenScrollController = ScrollController();
+  final _newsScrollController = ScrollController();
+  bool showScrollTopButton = false;
   List<NewsCard> news = [];
   TextEditingController textController = TextEditingController();
-  final _color = Colors.lightBlue;
-  final _cardColor = Colors.blue;
+  final _color = Colors.white54;
+  final _cardColor = Colors.white70;
 
   //Free NewsAPI search is limited to 1 month back with free API key. Substract 5 years instead if you have a paid key.
   DateTime selectedStartDate = DateTime.now().subtract(const Duration(days: 30));
@@ -36,13 +40,14 @@ class _SearchPageState extends State<SearchPage> {
     super.initState();
     _newsBloc = BlocProvider.of(context);
     _newsBloc.add(NewsInitialEvent());
-    _scrollController.addListener(_onScroll);
+    _screenScrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
+    _screenScrollController.removeListener(_onScroll);
+    _newsScrollController.dispose();
+    _screenScrollController.dispose();
     super.dispose();
   }
 
@@ -83,7 +88,7 @@ class _SearchPageState extends State<SearchPage> {
             const Text("No news found"),
           ])
         : SingleChildScrollView(
-            controller: _scrollController,
+            controller: _screenScrollController,
             child: Column(children: [
               _searchBar(),
               ListView.builder(
@@ -93,6 +98,7 @@ class _SearchPageState extends State<SearchPage> {
                       ? const Center(child: CircularProgressIndicator())
                       : getNewsCard(news[index]);
                 },
+                controller: _newsScrollController,
                 shrinkWrap: true,
               ),
             ]),
@@ -107,34 +113,41 @@ class _SearchPageState extends State<SearchPage> {
       try {
         image = Image.network(
           newsCard.urlToImage!,
-          width: screenWidth * 0.5,
-          height: screenHeight * 0.5,
+          width: screenWidth * 0.35,
+          height: screenHeight * 0.35,
           fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => Icon(Icons.image_not_supported, size: screenWidth * 0.5),
+          errorBuilder: (context, error, stackTrace) => Icon(Icons.image_not_supported, size: screenWidth * 0.35),
         );
       } catch (e) {
-        image = Icon(Icons.image_not_supported, size: screenWidth * 0.5);
+        image = Icon(Icons.image_not_supported, size: screenWidth * 0.35);
       }
     } else {
-      image = Icon(Icons.image_not_supported, size: screenWidth * 0.5);
+      image = Icon(Icons.image_not_supported, size: screenWidth * 0.35);
     }
     return GestureDetector(
       onTap: () => _newsBloc.add(MoveToDetailsEvent(context: context, newsCard: newsCard)),
       child: Card(
         color: _cardColor,
         child: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Column(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               image,
-              Padding(
-                padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
-                child: ListTile(
-                  title: Center(child: Text(newsCard.title ?? 'No title')),
-                  subtitle: Center(child: Text(newsCard.author ?? 'No author')),
+              const SizedBox(width: 16.0),
+              Expanded(
+                child: Column(
+                  children: [
+                    Text(newsCard.title ?? 'No title'),
+                    Text(
+                      newsCard.author ?? 'No author',
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                    const SizedBox(height: 16.0),
+                    Text(newsCard.description ?? 'No description'),
+                  ],
                 ),
               ),
-              Text(newsCard.description ?? 'No description'),
             ],
           ),
         ),
@@ -263,15 +276,15 @@ class _SearchPageState extends State<SearchPage> {
       appBar: AppBar(
         backgroundColor: _color,
         title: const Text('News App'),
-        actions: [
-          IconButton(
-            onPressed: _scrollToTop,
-            icon: const Icon(Icons.arrow_upward),
-            tooltip: 'Scroll to top',
-          ),
-        ],
       ),
       backgroundColor: _color,
+      floatingActionButton: Visibility(
+        visible: showScrollTopButton,
+        child: FloatingActionButton(
+          onPressed: _scrollToTop,
+          child: const Icon(Icons.arrow_upward),
+        ),
+      ),
       body: BlocConsumer<NewsBloc, NewsState>(
         listener: (context, state) {
           if (state is NewsErrorState) {
@@ -314,10 +327,22 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   void _scrollToTop() {
-    _scrollController.animateTo(0, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
+    if (!_screenScrollController.hasClients) return;
+    _screenScrollController.animateTo(0, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
   }
 
   void _onScroll() {
+    if (_screenScrollController.offset > 100) {
+      if (!showScrollTopButton) {
+        showScrollTopButton = true;
+        setState(() {});
+      }
+    } else {
+      if (showScrollTopButton) {
+        showScrollTopButton = false;
+        setState(() {});
+      }
+    }
     if (_isBottom) {
       if (_newsBloc.state is NewsLoadedState) {
         var state = _newsBloc.state as NewsLoadedState;
@@ -331,9 +356,9 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   bool get _isBottom {
-    if (!_scrollController.hasClients) return false;
-    final maxScroll = _scrollController.position.maxScrollExtent;
-    final currentScroll = _scrollController.offset;
+    if (!_screenScrollController.hasClients) return false;
+    final maxScroll = _screenScrollController.position.maxScrollExtent;
+    final currentScroll = _screenScrollController.offset;
     return currentScroll >= (maxScroll * 0.9);
   }
 }

@@ -3,15 +3,6 @@ import 'dart:developer';
 
 import 'package:dio/dio.dart';
 
-class NewsCardRequestException implements Error {
-  NewsCardRequestException() {
-    log('NewsCardRequestException');
-  }
-
-  @override
-  StackTrace? get stackTrace => throw UnimplementedError();
-}
-
 class NewsApiClient {
   NewsApiClient({required this.apiKey, required this.dio}) {
     dio.options.baseUrl = _baseUrl;
@@ -39,12 +30,9 @@ class NewsApiClient {
       'from': from,
       'to': to,
       'page': page,
-      'pageSize': 20, //Max is 100
+      'pageSize': 20, //Max is 100, can be changed to whatever
     });
-    // } catch (e) {
-    //   log('$e');
-    //   throw NewsCardRequestException();
-    // }
+    log('Trying to fetch news');
     final data = response.data;
     return data;
   }

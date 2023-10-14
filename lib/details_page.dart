@@ -9,7 +9,10 @@ class DetailsPage extends StatelessWidget {
   //Since there is always '[+number chars]' at the end of the content, we can replace it with ellipsis
   String getFixedContent() {
     if (newsCard.content != null) {
-      return newsCard.content!.replaceAll(RegExp(r'\[.*?\]'), '...');
+      String content = newsCard.content!;
+      if (content.length < 199) return content;
+      return content.substring(0, content.lastIndexOf('['));
+      // return newsCard.content!.replaceAll(RegExp(r'\[.*?\]'), '');
     } else {
       return '';
     }

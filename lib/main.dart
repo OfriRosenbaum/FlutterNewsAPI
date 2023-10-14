@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    //"A" new repository should not be created in RepositoryProvider.value",
+    //"A new repository should not be created in RepositoryProvider.value",
     //so I create it here and pass it to the NewsApp widget.
     return NewsApp(repository: NewsRepository());
   }
