@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -32,7 +31,6 @@ class NewsBloc extends Bloc<NewsEvent, NewsState> {
   Future<void> onFetchNewNewsEvent(FetchNewNewsEvent event, Emitter<NewsState> emit) async {
     emit(NewsLoadingState());
     try {
-      log('Hey this is new news event. State is: $state');
       Map<String, dynamic> results =
           await event.repository.fetchNews(event.news, 1, q: event.q, to: event.to, from: event.from);
       if (results['status'] == 'error') {
@@ -43,7 +41,7 @@ class NewsBloc extends Bloc<NewsEvent, NewsState> {
       if (e is DioException) {
         var code = e.response?.data['code'];
         if (code != null) {
-          emit(NewsErrorState.fromCode(code));
+          emit(NewsErrorState.fromCode(code, e.response?.data['message'] ?? 'Unknown error'));
         } else {
           emit(NewsErrorState.fromException(e));
         }
@@ -56,9 +54,9 @@ class NewsBloc extends Bloc<NewsEvent, NewsState> {
   Future<void> onFetchMoreNewsEvent(FetchMoreNewsEvent event, Emitter<NewsState> emit) async {
     if (state is NewsLoadedState) {
       var newState = state as NewsLoadedState;
-      if (!newState.hasReachedMax && !newState.loading) {
+      if (newState.loading) return;
+      if (!newState.hasReachedMax) {
         newState.loading = true;
-        emit(newState);
         try {
           Map<String, dynamic> results = await event.repository
               .fetchNews(event.news, newState.page + 1, q: event.q, to: event.to, from: event.from);
@@ -71,7 +69,7 @@ class NewsBloc extends Bloc<NewsEvent, NewsState> {
           if (e is DioException) {
             var code = e.response?.data['code'];
             if (code != null) {
-              emit(NewsErrorState.fromCode(code));
+              emit(NewsErrorState.fromCode(code, e.response?.data['message'] ?? 'Unknown error'));
             } else {
               emit(NewsErrorState.fromException(e));
             }
@@ -83,7 +81,6 @@ class NewsBloc extends Bloc<NewsEvent, NewsState> {
     } else {
       emit(NewsLoadingState());
       try {
-        log('Hey this is more news event. State is: $state');
         Map<String, dynamic> results =
             await event.repository.fetchNews(event.news, 1, q: event.q, to: event.to, from: event.from);
         if (results['status'] == 'error') {
@@ -94,7 +91,7 @@ class NewsBloc extends Bloc<NewsEvent, NewsState> {
         if (e is DioException) {
           var code = e.response?.data['code'];
           if (code != null) {
-            emit(NewsErrorState.fromCode(code));
+            emit(NewsErrorState.fromCode(code, e.response?.data['message'] ?? 'Unknown error'));
           } else {
             emit(NewsErrorState.fromException(e));
           }

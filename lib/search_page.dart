@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:home_assignment/barrel.dart';
@@ -24,7 +22,7 @@ class _SearchPageState extends State<SearchPage> {
   bool showScrollTopButton = false;
   List<NewsCard> news = [];
   TextEditingController textController = TextEditingController();
-  final _color = Colors.white54;
+  final _color = Colors.white60;
   final _cardColor = Colors.white70;
 
   //Free NewsAPI search is limited to 1 month back with free API key. Substract 5 years instead if you have a paid key.
@@ -286,6 +284,7 @@ class _SearchPageState extends State<SearchPage> {
         ),
       ),
       body: BlocConsumer<NewsBloc, NewsState>(
+        buildWhen: (previous, current) => current is! NewsErrorState,
         listener: (context, state) {
           if (state is NewsErrorState) {
             WidgetsBinding.instance.addPostFrameCallback((_) {

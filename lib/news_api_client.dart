@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 
 import 'package:dio/dio.dart';
 
@@ -24,7 +23,6 @@ class NewsApiClient {
     int? page,
   }) async {
     Response response;
-    // try {
     response = await dio.get(_path, queryParameters: {
       'q': q,
       'from': from,
@@ -32,7 +30,6 @@ class NewsApiClient {
       'page': page,
       'pageSize': 20, //Max is 100, can be changed to whatever
     });
-    log('Trying to fetch news');
     final data = response.data;
     return data;
   }

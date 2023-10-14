@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'news_card.dart';
@@ -78,12 +79,19 @@ class DetailsPage extends StatelessWidget {
                         try {
                           await launchUrl(url);
                         } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Could not launch $url'),
-                              duration: const Duration(seconds: 3),
-                            ),
-                          );
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            FToast().init(context).showToast(
+                                toastDuration: const Duration(seconds: 5),
+                                child: Container(
+                                  padding: const EdgeInsets.all(16.0),
+                                  decoration: const BoxDecoration(
+                                      borderRadius: BorderRadius.all(Radius.circular(20)), color: Colors.red),
+                                  child: const Text(
+                                    'Could not launch URL',
+                                    style: TextStyle(fontSize: 16.0),
+                                  ),
+                                ));
+                          });
                         }
                       },
                       child: const Text('Read more'),

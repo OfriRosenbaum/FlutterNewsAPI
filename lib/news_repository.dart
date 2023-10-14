@@ -18,7 +18,7 @@ class NewsRepository {
         news.add(NewsCard.fromJson(element));
       }
       log(response['totalResults'].toString());
-      return {'status': 'ok', 'news': news, 'page': page + 1, 'hasReachedMax': news.length >= response['totalResults']};
+      return {'status': 'ok', 'news': news, 'page': page, 'hasReachedMax': news.length >= response['totalResults']};
     } catch (e) {
       return {'status': 'error', 'error': e};
     }
