@@ -20,10 +20,16 @@ class _SearchPageState extends State<SearchPage> {
   final _scrollController = ScrollController();
   List<NewsCard> news = [];
   TextEditingController textController = TextEditingController();
+  final _color = Colors.lightBlue;
+  final _cardColor = Colors.blue;
 
   //Free NewsAPI search is limited to 1 month back with free API key. Substract 5 years instead if you have a paid key.
   DateTime selectedStartDate = DateTime.now().subtract(const Duration(days: 30));
   DateTime selectedEndDate = DateTime.now();
+
+  String? lastKeywords;
+  String? lastFrom;
+  String? lastTo;
 
   @override
   void initState() {
@@ -40,20 +46,12 @@ class _SearchPageState extends State<SearchPage> {
     super.dispose();
   }
 
+  String dateToString(DateTime date) {
+    return '${date.year}-${date.month}-${date.day}';
+  }
+
   Widget _buildInitialState() {
-    return Column(children: [
-      _searchBar(),
-      Center(
-        child: ElevatedButton(
-            onPressed: () => _newsBloc.add(FetchNewsEvent(
-                repository: RepositoryProvider.of(context),
-                news: [],
-                q: 'coca cola',
-                from: "2023-9-25",
-                to: "2023-9-27")),
-            child: const Text("Fetch news")),
-      ),
-    ]);
+    return _searchBar();
   }
 
   Widget _buildLoadingState() {
@@ -76,20 +74,71 @@ class _SearchPageState extends State<SearchPage> {
 
   Widget _buildLoadedState(NewsLoadedState state) {
     news = state.news;
-    return SingleChildScrollView(
-      child: Column(children: [
-        _searchBar(),
-        ListView.builder(
-          itemCount: state.hasReachedMax ? news.length : news.length + 1,
-          itemBuilder: (context, index) {
-            return index >= news.length
-                ? const Center(child: CircularProgressIndicator())
-                : news[index].showNewsCard(context);
-          },
-          controller: _scrollController,
-          shrinkWrap: true,
+    return news.isEmpty
+        ? Column(children: [
+            _searchBar(),
+            const SizedBox(
+              height: 20,
+            ),
+            const Text("No news found"),
+          ])
+        : SingleChildScrollView(
+            controller: _scrollController,
+            child: Column(children: [
+              _searchBar(),
+              ListView.builder(
+                itemCount: state.hasReachedMax ? news.length : news.length + 1,
+                itemBuilder: (context, index) {
+                  return index >= news.length
+                      ? const Center(child: CircularProgressIndicator())
+                      : getNewsCard(news[index]);
+                },
+                shrinkWrap: true,
+              ),
+            ]),
+          );
+  }
+
+  Widget getNewsCard(NewsCard newsCard) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.width;
+    Widget image;
+    if (newsCard.urlToImage != null) {
+      try {
+        image = Image.network(
+          newsCard.urlToImage!,
+          width: screenWidth * 0.5,
+          height: screenHeight * 0.5,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => Icon(Icons.image_not_supported, size: screenWidth * 0.5),
+        );
+      } catch (e) {
+        image = Icon(Icons.image_not_supported, size: screenWidth * 0.5);
+      }
+    } else {
+      image = Icon(Icons.image_not_supported, size: screenWidth * 0.5);
+    }
+    return GestureDetector(
+      onTap: () => _newsBloc.add(MoveToDetailsEvent(context: context, newsCard: newsCard)),
+      child: Card(
+        color: _cardColor,
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            children: [
+              image,
+              Padding(
+                padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
+                child: ListTile(
+                  title: Center(child: Text(newsCard.title ?? 'No title')),
+                  subtitle: Center(child: Text(newsCard.author ?? 'No author')),
+                ),
+              ),
+              Text(newsCard.description ?? 'No description'),
+            ],
+          ),
         ),
-      ]),
+      ),
     );
   }
 
@@ -128,7 +177,7 @@ class _SearchPageState extends State<SearchPage> {
 
   Widget _searchBar() {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.all(12.0),
       child: Column(children: [
         Row(
           children: [
@@ -148,7 +197,11 @@ class _SearchPageState extends State<SearchPage> {
               ),
             ),
             const SizedBox(height: 8.0),
-            IconButton(onPressed: showSearchDialog, icon: const Icon(Icons.info_outline)),
+            IconButton(
+              onPressed: showSearchDialog,
+              icon: const Icon(Icons.info_outline),
+              tooltip: 'Advanced Search',
+            ),
           ],
         ),
         const SizedBox(height: 16.0),
@@ -197,7 +250,9 @@ class _SearchPageState extends State<SearchPage> {
               ),
             ),
           ],
-        )
+        ),
+        const SizedBox(height: 16.0),
+        ElevatedButton(onPressed: fetchNewNews, child: const Text("Fetch news")),
       ]),
     );
   }
@@ -206,8 +261,17 @@ class _SearchPageState extends State<SearchPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: _color,
         title: const Text('News App'),
+        actions: [
+          IconButton(
+            onPressed: _scrollToTop,
+            icon: const Icon(Icons.arrow_upward),
+            tooltip: 'Scroll to top',
+          ),
+        ],
       ),
+      backgroundColor: _color,
       body: BlocConsumer<NewsBloc, NewsState>(
         listener: (context, state) {
           if (state is NewsErrorState) {
@@ -241,6 +305,18 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
+  void fetchNewNews() {
+    lastKeywords = textController.text;
+    lastFrom = dateToString(selectedStartDate);
+    lastTo = dateToString(selectedEndDate);
+    _newsBloc.add(FetchNewNewsEvent(
+        repository: RepositoryProvider.of(context), news: [], q: lastKeywords, from: lastFrom, to: lastTo));
+  }
+
+  void _scrollToTop() {
+    _scrollController.animateTo(0, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
+  }
+
   void _onScroll() {
     if (_isBottom) {
       if (_newsBloc.state is NewsLoadedState) {
@@ -248,12 +324,8 @@ class _SearchPageState extends State<SearchPage> {
         if (state.hasReachedMax || state.loading) {
           return;
         }
-        context.read<NewsBloc>().add(FetchNewsEvent(
-            repository: RepositoryProvider.of(context),
-            news: news,
-            q: 'coca cola',
-            from: "2023-9-25",
-            to: "2023-9-27"));
+        context.read<NewsBloc>().add(FetchMoreNewsEvent(
+            repository: RepositoryProvider.of(context), news: news, q: lastKeywords, from: lastFrom, to: lastTo));
       }
     }
   }

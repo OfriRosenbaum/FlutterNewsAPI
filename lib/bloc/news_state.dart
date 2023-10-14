@@ -34,7 +34,7 @@ class NewsErrorState extends NewsState {
           message = 'Receive timeout';
           break;
         case DioExceptionType.badResponse:
-          message = 'Response error';
+          message = 'Your search is too broad. Try adding more keywords.';
           break;
         case DioExceptionType.cancel:
           message = 'Request cancelled';

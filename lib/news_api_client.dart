@@ -18,7 +18,7 @@ class NewsApiClient {
     dio.options.headers = {
       'Authorization': apiKey,
     };
-    dio.options.connectTimeout = const Duration(seconds: 15);
+    dio.options.connectTimeout = const Duration(seconds: 10);
   }
 
   final Dio dio;
@@ -39,6 +39,7 @@ class NewsApiClient {
       'from': from,
       'to': to,
       'page': page,
+      'pageSize': 20, //Max is 100
     });
     // } catch (e) {
     //   log('$e');
