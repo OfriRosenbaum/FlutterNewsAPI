@@ -12,6 +12,7 @@ NewsCard _$NewsCardFromJson(Map<String, dynamic> json) => NewsCard(
       description: json['description'] as String?,
       content: json['content'] as String?,
       urlToImage: json['urlToImage'] as String?,
+      url: json['url'] as String?,
     );
 
 Map<String, dynamic> _$NewsCardToJson(NewsCard instance) => <String, dynamic>{
@@ -20,4 +21,5 @@ Map<String, dynamic> _$NewsCardToJson(NewsCard instance) => <String, dynamic>{
       'description': instance.description,
       'content': instance.content,
       'urlToImage': instance.urlToImage,
+      'url': instance.url,
     };
