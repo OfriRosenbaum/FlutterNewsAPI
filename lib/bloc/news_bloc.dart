@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:home_assignment/barrel.dart';
 import 'package:home_assignment/details_page.dart';
+import 'package:hive/hive.dart';
 
 import 'news_event.dart';
 import 'news_state.dart';
@@ -17,7 +20,27 @@ class NewsBloc extends Bloc<NewsEvent, NewsState> {
   }
 
   FutureOr<void> onNewsInitialEvent(NewsInitialEvent event, Emitter<NewsState> emit) async {
-    emit(NewsInitialState());
+    emit(NewsLoadingState());
+    try {
+      var box = await Hive.openBox('news');
+      String q = box.get('q');
+      String from = box.get('from');
+      String to = box.get('to');
+      int page = box.get('page') ?? 1;
+      int results = box.get('results') ?? 0;
+      List<NewsCard> news = [];
+      List<dynamic> articles = await box.get('articles');
+      for (var element in articles) {
+        if (element is Map<dynamic, dynamic>) {
+          news.add(NewsCard.fromJson(Map<String, dynamic>.from(element)));
+        }
+      }
+      emit(NewsInitialLoadState(
+          q: q, from: from, to: to, news: news, page: page, hasReachedMax: news.length >= results));
+    } catch (e) {
+      log('No cache found in Hive. Error: $e');
+      emit(NewsInitialState());
+    }
   }
 
   FutureOr<void> onMoveToDetailsEvent(MoveToDetailsEvent event, Emitter<NewsState> emit) async {
@@ -36,6 +59,7 @@ class NewsBloc extends Bloc<NewsEvent, NewsState> {
       if (results['status'] == 'error') {
         throw results['error'];
       }
+      saveInHive(event.q ?? '', event.from ?? '', event.to ?? '', results['page'], results['results'], results['news']);
       emit(NewsLoadedState(news: results['news'], page: 1, hasReachedMax: results['hasReachedMax'], loading: false));
     } catch (e) {
       if (e is DioException) {
@@ -48,6 +72,7 @@ class NewsBloc extends Bloc<NewsEvent, NewsState> {
       } else {
         emit(NewsErrorState(message: e.toString()));
       }
+      emit(NewsInitialState());
     }
   }
 
@@ -63,6 +88,8 @@ class NewsBloc extends Bloc<NewsEvent, NewsState> {
           if (results['status'] == 'error') {
             throw results['error'];
           }
+          saveInHive(
+              event.q ?? '', event.from ?? '', event.to ?? '', results['page'], results['results'], results['news']);
           emit(NewsLoadedState(
               news: results['news'], page: results['page'], hasReachedMax: results['hasReachedMax'], loading: false));
         } catch (e) {
@@ -86,6 +113,7 @@ class NewsBloc extends Bloc<NewsEvent, NewsState> {
         if (results['status'] == 'error') {
           throw results['error'];
         }
+        saveInHive(event.q ?? '', event.from ?? '', event.to ?? '', 1, results['results'], results['news']);
         emit(NewsLoadedState(news: results['news'], page: 1, hasReachedMax: results['hasReachedMax'], loading: false));
       } catch (e) {
         if (e is DioException) {
@@ -99,6 +127,25 @@ class NewsBloc extends Bloc<NewsEvent, NewsState> {
           emit(NewsErrorState(message: e.toString()));
         }
       }
+    }
+  }
+
+  void saveInHive(String q, String from, String to, int page, int results, List<NewsCard> news) async {
+    try {
+      var box = await Hive.openBox('news');
+      box.clear();
+      box.put('q', q);
+      box.put('from', from);
+      box.put('to', to);
+      box.put('page', page);
+      box.put('results', results);
+      List<Map<String, dynamic>> articles = [];
+      for (var element in news) {
+        articles.add(element.toJson());
+      }
+      box.put('articles', articles);
+    } catch (e) {
+      log('Error caching in hive: $e');
     }
   }
 }

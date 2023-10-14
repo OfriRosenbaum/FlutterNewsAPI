@@ -8,10 +8,23 @@ class NewsInitialState extends NewsState {}
 
 class NewsLoadingState extends NewsState {}
 
+class NewsInitialLoadState extends NewsLoadedState {
+  final String? q;
+  final String? from;
+  final String? to;
+  NewsInitialLoadState(
+      {required this.q,
+      required this.from,
+      required this.to,
+      required List<NewsCard> news,
+      required hasReachedMax,
+      required page})
+      : super(news: news, page: page, hasReachedMax: hasReachedMax, loading: false);
+}
+
 class NewsLoadedState extends NewsState {
   final List<NewsCard> news;
   int page = 1;
-  int results = 0;
   bool hasReachedMax = false;
   bool loading = false;
   NewsLoadedState({required this.news, required this.page, required this.hasReachedMax, required this.loading});

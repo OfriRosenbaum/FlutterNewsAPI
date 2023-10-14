@@ -75,8 +75,8 @@ class DetailsPage extends StatelessWidget {
               newsCard.url != null
                   ? ElevatedButton(
                       onPressed: () async {
-                        Uri url = Uri.parse(newsCard.url!);
                         try {
+                          Uri url = Uri.parse(newsCard.url!);
                           await launchUrl(url);
                         } catch (e) {
                           WidgetsBinding.instance.addPostFrameCallback((_) {

@@ -20,6 +20,7 @@ class _SearchPageState extends State<SearchPage> {
   final _screenScrollController = ScrollController();
   final _newsScrollController = ScrollController();
   bool showScrollTopButton = false;
+  bool firstUpdated = false;
   List<NewsCard> news = [];
   TextEditingController textController = TextEditingController();
   final _color = Colors.white60;
@@ -51,6 +52,14 @@ class _SearchPageState extends State<SearchPage> {
 
   String dateToString(DateTime date) {
     return '${date.year}-${date.month}-${date.day}';
+  }
+
+  DateTime stringToDate(String date) {
+    List<String> dateParts = date.split('-');
+    for (var i = 0; i < dateParts.length; i++) {
+      dateParts[i] = dateParts[i].padLeft(2, '0');
+    }
+    return DateTime.parse(dateParts.join('-'));
   }
 
   Widget _buildInitialState() {
@@ -308,6 +317,17 @@ class _SearchPageState extends State<SearchPage> {
           } else if (state is NewsLoadingState) {
             return _buildLoadingState();
           } else if (state is NewsLoadedState) {
+            if (state is NewsInitialLoadState) {
+              if (!firstUpdated) {
+                state.q != null ? textController.text = state.q! : () => {};
+                state.from != null && state.from != '' ? selectedStartDate = stringToDate(state.from!) : () => {};
+                state.to != null && state.to != '' ? selectedEndDate = stringToDate(state.to!) : () => {};
+                lastKeywords = textController.text;
+                lastFrom = dateToString(selectedStartDate);
+                lastTo = dateToString(selectedEndDate);
+                firstUpdated = true;
+              }
+            }
             return _buildLoadedState(state);
           } else {
             return _buildInitialState();

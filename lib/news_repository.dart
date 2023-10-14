@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:dio/dio.dart';
 import 'package:home_assignment/barrel.dart';
@@ -17,8 +15,13 @@ class NewsRepository {
       for (var element in articles) {
         news.add(NewsCard.fromJson(element));
       }
-      log(response['totalResults'].toString());
-      return {'status': 'ok', 'news': news, 'page': page, 'hasReachedMax': news.length >= response['totalResults']};
+      return {
+        'status': 'ok',
+        'news': news,
+        'page': page,
+        'hasReachedMax': news.length >= response['totalResults'],
+        'results': response['totalResults']
+      };
     } catch (e) {
       return {'status': 'error', 'error': e};
     }

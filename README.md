@@ -23,3 +23,5 @@ To prevent this issue, simply debug the app without breakpoints on uncaught exce
 - json_annotation
 - json_serializable
 - build_runner
+- url_launcher
+- path_provider
