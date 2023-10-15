@@ -23,7 +23,7 @@ class _SearchPageState extends State<SearchPage> {
   bool firstUpdated = false;
   List<NewsCard> news = [];
   TextEditingController textController = TextEditingController();
-  final _color = Colors.white60;
+  final _color = const Color.fromARGB(248, 224, 248, 248);
   final _cardColor = Colors.white70;
 
   //Free NewsAPI search is limited to 1 month back with free API key. Substract 5 years instead if you have a paid key.
@@ -134,6 +134,13 @@ class _SearchPageState extends State<SearchPage> {
     return GestureDetector(
       onTap: () => _newsBloc.add(MoveToDetailsEvent(context: context, newsCard: newsCard)),
       child: Card(
+        shadowColor: Colors.purpleAccent,
+        shape: RoundedRectangleBorder(
+          side: const BorderSide(
+            color: Colors.deepPurpleAccent,
+          ),
+          borderRadius: BorderRadius.circular(20.0),
+        ),
         color: _cardColor,
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -148,7 +155,7 @@ class _SearchPageState extends State<SearchPage> {
                     Text(newsCard.title ?? 'No title'),
                     Text(
                       newsCard.author ?? 'No author',
-                      style: const TextStyle(color: Colors.grey),
+                      style: const TextStyle(color: Colors.black54),
                     ),
                     const SizedBox(height: 16.0),
                     Text(newsCard.description ?? 'No description'),

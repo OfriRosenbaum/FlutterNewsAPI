@@ -7,6 +7,7 @@ import 'news_card.dart';
 class DetailsPage extends StatelessWidget {
   final NewsCard newsCard;
   const DetailsPage({super.key, required this.newsCard});
+  final _color = const Color.fromARGB(248, 224, 248, 248);
 
   //Since there is always '[+number chars]' at the end of the content, we can replace it with ellipsis
   String getFixedContent() {
@@ -41,9 +42,9 @@ class DetailsPage extends StatelessWidget {
       image = Icon(Icons.image_not_supported, size: screenWidth * 0.5);
     }
     return Scaffold(
-      backgroundColor: Colors.white70,
+      backgroundColor: _color,
       appBar: AppBar(
-        backgroundColor: Colors.white54,
+        backgroundColor: _color,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
